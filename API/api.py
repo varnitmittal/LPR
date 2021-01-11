@@ -6,7 +6,6 @@ import os
 from flask_cors import CORS, cross_origin
 
 import tensorflow as tf
-import matplotlib.pyplot as plt
 import numpy as np
 import cv2
 
@@ -14,6 +13,8 @@ execution_path = os.getcwd()
 
 app = Flask(__name__)
 CORS(app)
+app.config['CORS_HEADERS'] = 'Content-Type'
+
 
 def loadModel(jsonStr, weightStr):
     json_file = open(jsonStr, 'r')
@@ -152,13 +153,15 @@ def show_results(char):
     return plate_number
 
 @app.route("/", methods=['GET'])
+@cross_origin()
 def index():
     r = make_response(render_template("home.html"))
-    r.headers.set('Access-Control-Allow-Origin', '*')
+    r.headers.set("Access-Control-Allow-Origin", "*")
     return r
 
 
 @app.route("/predict", methods=["POST"])
+@cross_origin()
 def predict():
     content = request.get_json()
     image_in = content['chosenImage']
@@ -170,15 +173,18 @@ def predict():
     img = cv2.imread('car_plate_input.png', cv2.IMREAD_UNCHANGED)
     char = segment_characters(img)
     plate = show_results(char)
+    print("Working till here!")
     response = jsonify({
         "success": True,
-        "plate_detected": plate
+        "imstr": "123456789",
+        "detections": plate
     })
-    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    response.headers.add("Access-Control-Allow-Headers", "*")
     return response
 
 
 #get_model()
 if __name__ == "__main__":
-    port = int(os.environ.get('PORT', 3000))
+    port = int(os.environ.get('PORT', 8000))
     app.run(port=port)
